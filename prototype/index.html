@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskManagement - ボード</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:      #0052CC;
+      --primary-h:    #0747A6;
+      --danger:       #DE350B;
+      --danger-h:     #BF2600;
+      --bg:           #F4F5F7;
+      --surface:      #FFFFFF;
+      --col-bg:       #EBECF0;
+      --border:       #DFE1E6;
+      --text:         #172B4D;
+      --text-sub:     #6B778C;
+      --shadow-card:  0 1px 3px rgba(0,0,0,.12);
+      --shadow-modal: 0 8px 32px rgba(0,0,0,.24);
+      --r-sm: 4px; --r-md: 8px;
+    }
+
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+
+    /* ===== Header ===== */
+    .app-header {
+      position: sticky; top: 0; z-index: 100;
+      height: 56px; background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px;
+    }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .app-title { font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .header-user { font-size: 13px; color: var(--text-sub); }
+
+    /* ===== Buttons ===== */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 6px 14px; border-radius: var(--r-sm); font-size: 13px;
+      font-weight: 500; font-family: inherit; cursor: pointer; border: none;
+      transition: background .15s; white-space: nowrap;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-h); }
+    .btn-secondary { background: transparent; color: var(--text); border: 2px solid var(--border); }
+    .btn-secondary:hover { background: var(--bg); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { background: var(--danger-h); }
+
+    /* ===== Board ===== */
+    .board-container {
+      display: flex; align-items: flex-start; gap: 16px;
+      padding: 24px; min-height: calc(100vh - 56px); overflow-x: auto;
+    }
+    .board-column {
+      flex-shrink: 0; width: 288px; background: var(--col-bg);
+      border-radius: var(--r-md); display: flex; flex-direction: column;
+      max-height: calc(100vh - 56px - 48px);
+    }
+    .column-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 14px 8px; gap: 6px;
+    }
+    .column-title {
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--text-sub); flex-shrink: 0;
+    }
+    .column-controls { display: flex; align-items: center; gap: 4px; }
+    .sort-btn {
+      padding: 2px 7px; font-size: 10px; font-weight: 600; font-family: inherit;
+      border: 1px solid var(--border); border-radius: 10px;
+      background: transparent; color: var(--text-sub); cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s; white-space: nowrap;
+    }
+    .sort-btn:hover { background: var(--surface); color: var(--text); }
+    .sort-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .column-count {
+      background: var(--border); color: var(--text-sub);
+      font-size: 11px; font-weight: 700; border-radius: 10px;
+      padding: 1px 7px; min-width: 22px; text-align: center;
+    }
+    .card-list {
+      flex: 1; overflow-y: auto; padding: 0 8px 8px;
+      display: flex; flex-direction: column; gap: 8px; min-height: 60px;
+    }
+
+    /* ===== Task Card ===== */
+    .task-card {
+      background: var(--surface); border-radius: var(--r-sm);
+      box-shadow: var(--shadow-card); padding: 10px 12px;
+      cursor: pointer; transition: box-shadow .15s, transform .1s;
+      border: 1px solid transparent;
+    }
+    .task-card:hover {
+      box-shadow: 0 3px 10px rgba(0,0,0,.15);
+      transform: translateY(-1px); border-color: var(--border);
+    }
+    .task-title { font-size: 14px; font-weight: 500; margin-bottom: 8px; line-height: 1.4; word-break: break-word; }
+    .task-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .task-due { font-size: 11px; color: var(--text-sub); white-space: nowrap; }
+    .task-due.overdue { color: var(--danger); font-weight: 600; }
+
+    /* ===== Badges ===== */
+    .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: 700; }
+    .badge-high   { background: #FFEBE6; color: #BF2600; }
+    .badge-medium { background: #FFFAE6; color: #974F0C; }
+    .badge-low    { background: #E3FCEF; color: #006644; }
+
+    /* ===== Add Card Button ===== */
+    .add-card-btn {
+      display: flex; align-items: center; gap: 4px; width: 100%;
+      padding: 8px 14px; background: transparent; border: none;
+      border-radius: 0 0 var(--r-md) var(--r-md);
+      color: var(--text-sub); font-size: 13px; font-family: inherit;
+      cursor: pointer; text-align: left; transition: background .15s, color .15s;
+    }
+    .add-card-btn:hover { background: rgba(9,30,66,.08); color: var(--text); }
+
+    /* ===== Sortable ===== */
+    .sortable-ghost { opacity: .35; background: #C8EBFB; border-radius: var(--r-sm); }
+    .sortable-drag  { cursor: grabbing !important; box-shadow: 0 6px 20px rgba(0,0,0,.2) !important; transform: rotate(1.5deg); }
+
+    /* ===== Modal ===== */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(9,30,66,.54); z-index: 1000;
+      align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-content {
+      background: var(--surface); border-radius: var(--r-md);
+      box-shadow: var(--shadow-modal); width: 100%; max-width: 500px;
+      max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column;
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 24px 24px 0;
+    }
+    .modal-title { font-size: 18px; font-weight: 700; }
+    .modal-close {
+      background: none; border: none; font-size: 16px; color: var(--text-sub);
+      cursor: pointer; padding: 4px 8px; border-radius: var(--r-sm);
+      transition: background .15s;
+    }
+    .modal-close:hover { background: var(--bg); color: var(--text); }
+
+    /* ===== Form ===== */
+    #cardForm { padding: 20px 24px; }
+    .form-group { margin-bottom: 16px; }
+    .form-row { display: flex; gap: 16px; }
+    .form-row .form-group { flex: 1; }
+    label {
+      display: block; font-size: 11px; font-weight: 700; color: var(--text-sub);
+      text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px;
+    }
+    .required { color: var(--danger); }
+    input[type="text"], input[type="date"], textarea, select {
+      width: 100%; padding: 8px 12px; border: 2px solid var(--border);
+      border-radius: var(--r-sm); font-size: 14px; font-family: inherit;
+      color: var(--text); background: var(--surface);
+      transition: border-color .15s; outline: none;
+    }
+    input[type="text"]:focus, input[type="date"]:focus,
+    textarea:focus, select:focus { border-color: var(--primary); }
+    input.err, textarea.err, select.err { border-color: var(--danger); }
+    textarea { resize: vertical; min-height: 80px; }
+    .field-error { color: var(--danger); font-size: 12px; margin-top: 4px; display: none; }
+    .field-error.show { display: block; }
+
+    /* ===== Modal Footer ===== */
+    .modal-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 24px; border-top: 1px solid var(--border); gap: 8px;
+    }
+    .footer-right { display: flex; gap: 8px; margin-left: auto; }
+  </style>
+</head>
+<body>
+
+  <!-- ヘッダー -->
+  <header class="app-header">
+    <div class="header-left">
+      <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
+        <rect width="36" height="36" rx="8" fill="#0052CC"/>
+        <rect x="8" y="9" width="7" height="7" rx="1.5" fill="white"/>
+        <rect x="8" y="20" width="7" height="7" rx="1.5" fill="white" opacity=".55"/>
+        <rect x="17" y="9" width="11" height="2.5" rx="1.25" fill="white"/>
+        <rect x="17" y="13" width="8" height="2.5" rx="1.25" fill="white" opacity=".55"/>
+        <rect x="17" y="20" width="11" height="2.5" rx="1.25" fill="white"/>
+        <rect x="17" y="24" width="6" height="2.5" rx="1.25" fill="white" opacity=".55"/>
+      </svg>
+      <span class="app-title">TaskManagement</span>
+    </div>
+    <div class="header-right">
+      <span class="header-user" id="headerUser">admin</span>
+      <button id="logoutBtn" class="btn btn-secondary">ログアウト</button>
+    </div>
+  </header>
+
+  <!-- ボード -->
+  <main class="board-container">
+    <div class="board-column" data-column="TODO">
+      <div class="column-header">
+        <span class="column-title">Todo</span>
+        <div class="column-controls">
+          <button class="sort-btn" data-column="TODO" data-sort="priority">優先度</button>
+          <button class="sort-btn" data-column="TODO" data-sort="dueDate">期限</button>
+          <span class="column-count" id="count-TODO">0</span>
+        </div>
+      </div>
+      <div class="card-list" id="list-TODO"></div>
+      <button class="add-card-btn" data-column="TODO">＋ タスクを追加</button>
+    </div>
+
+    <div class="board-column" data-column="IN_PROGRESS">
+      <div class="column-header">
+        <span class="column-title">In Progress</span>
+        <div class="column-controls">
+          <button class="sort-btn" data-column="IN_PROGRESS" data-sort="priority">優先度</button>
+          <button class="sort-btn" data-column="IN_PROGRESS" data-sort="dueDate">期限</button>
+          <span class="column-count" id="count-IN_PROGRESS">0</span>
+        </div>
+      </div>
+      <div class="card-list" id="list-IN_PROGRESS"></div>
+      <button class="add-card-btn" data-column="IN_PROGRESS">＋ タスクを追加</button>
+    </div>
+
+    <div class="board-column" data-column="DONE">
+      <div class="column-header">
+        <span class="column-title">Done</span>
+        <div class="column-controls">
+          <button class="sort-btn" data-column="DONE" data-sort="priority">優先度</button>
+          <button class="sort-btn" data-column="DONE" data-sort="dueDate">期限</button>
+          <span class="column-count" id="count-DONE">0</span>
+        </div>
+      </div>
+      <div class="card-list" id="list-DONE"></div>
+      <button class="add-card-btn" data-column="DONE">＋ タスクを追加</button>
+    </div>
+  </main>
+
+  <!-- モーダル -->
+  <div id="modalOverlay" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle" class="modal-title">タスク作成</h2>
+        <button id="modalCloseBtn" class="modal-close" aria-label="閉じる">✕</button>
+      </div>
+      <form id="cardForm" novalidate>
+        <div class="form-group">
+          <label for="cardTitle">タイトル <span class="required">*</span></label>
+          <input type="text" id="cardTitle" placeholder="タスクのタイトルを入力">
+          <p class="field-error" id="cardTitleError">タイトルは必須です</p>
+        </div>
+        <div class="form-group">
+          <label for="cardDesc">説明</label>
+          <textarea id="cardDesc" placeholder="タスクの詳細を入力（任意）"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cardPriority">優先度</label>
+            <select id="cardPriority">
+              <option value="HIGH">高</option>
+              <option value="MEDIUM" selected>中</option>
+              <option value="LOW">低</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="cardDueDate">期限</label>
+            <input type="date" id="cardDueDate">
+          </div>
+        </div>
+      </form>
+      <div class="modal-footer">
+        <div class="footer-left">
+          <button id="deleteBtn" class="btn btn-danger" style="display:none;">削除</button>
+        </div>
+        <div class="footer-right">
+          <button id="cancelBtn" class="btn btn-secondary">キャンセル</button>
+          <button id="saveBtn" class="btn btn-primary">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <script>
+    /* ===== Auth Guard ===== */
+    if (sessionStorage.getItem('loggedIn') !== 'true') location.replace('login.html');
+
+    /* ===== Mock Data ===== */
+    const AppState = {
+      tasks: [
+        { id: 1, title: 'ログイン画面の実装', description: 'ID/パスワードのバリデーションを含む認証フォームを実装する', priority: 'HIGH',   dueDate: '2026-05-01', column: 'TODO',        position: 0 },
+        { id: 2, title: 'ボード画面のレイアウト作成', description: '3カラム構成のCSSを設計し、カード表示を実装する', priority: 'MEDIUM', dueDate: '2026-05-10', column: 'TODO',        position: 1 },
+        { id: 3, title: 'REST API設計', description: 'タスクCRUDのエンドポイント設計',                                   priority: 'HIGH',   dueDate: '2026-04-30', column: 'IN_PROGRESS', position: 0 },
+        { id: 4, title: 'ドラッグ&ドロップ実装', description: 'Sortable.jsでカラム間移動を実装する',                    priority: 'MEDIUM', dueDate: '2026-05-15', column: 'IN_PROGRESS', position: 1 },
+        { id: 5, title: '要件定義書の作成', description: '',                                                              priority: 'HIGH',   dueDate: '2026-04-20', column: 'DONE',        position: 0 },
+        { id: 6, title: 'ER図の設計', description: 'USER・TASKテーブルの関係を整理する',                                 priority: 'LOW',    dueDate: '2026-04-22', column: 'DONE',        position: 1 },
+      ],
+      getTasksByColumn(col) {
+        return this.tasks.filter(t => t.column === col).sort((a, b) => a.position - b.position);
+      },
+      getTaskById(id) { return this.tasks.find(t => t.id === id) || null; },
+      addTask(data) {
+        const positions = this.tasks.filter(t => t.column === data.column).map(t => t.position);
+        const maxPos = positions.length ? Math.max(...positions) : -1;
+        this.tasks.push({ id: Date.now(), position: maxPos + 1, ...data });
+      },
+      updateTask(id, changes) {
+        const idx = this.tasks.findIndex(t => t.id === id);
+        if (idx !== -1) Object.assign(this.tasks[idx], changes);
+      },
+      deleteTask(id) { this.tasks = this.tasks.filter(t => t.id !== id); },
+      reorderColumn(col, orderedIds) {
+        orderedIds.forEach((id, i) => this.updateTask(Number(id), { column: col, position: i }));
+      }
+    };
+
+    /* ===== Helpers ===== */
+    const PRIORITY_LABEL = { HIGH: '高', MEDIUM: '中', LOW: '低' };
+    const PRIORITY_CLASS = { HIGH: 'badge-high', MEDIUM: 'badge-medium', LOW: 'badge-low' };
+    const PRIORITY_ORDER = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+    const COLUMNS = ['TODO', 'IN_PROGRESS', 'DONE'];
+    const TODAY = new Date().toISOString().slice(0, 10);
+
+    function formatDate(str) {
+      if (!str) return '';
+      const [y, m, d] = str.split('-');
+      return `${y}/${m}/${d}`;
+    }
+
+    /* ===== Sort State ===== */
+    // 値: null | 'priority-asc' | 'priority-desc' | 'dueDate-asc' | 'dueDate-desc'
+    const sortState = { TODO: null, IN_PROGRESS: null, DONE: null };
+    const SORT_LABELS = { priority: '優先度', dueDate: '期限' };
+
+    function getSortedTasks(col) {
+      const tasks = AppState.getTasksByColumn(col);
+      const state = sortState[col];
+      if (!state) return tasks;
+      const [key, dir] = state.split('-');
+      const asc = dir === 'asc';
+      return [...tasks].sort((a, b) => {
+        if (key === 'priority') {
+          const diff = PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
+          return asc ? diff : -diff;
+        }
+        if (key === 'dueDate') {
+          if (!a.dueDate && !b.dueDate) return 0;
+          if (!a.dueDate) return 1;
+          if (!b.dueDate) return -1;
+          const diff = a.dueDate.localeCompare(b.dueDate);
+          return asc ? diff : -diff;
+        }
+        return 0;
+      });
+    }
+
+    function updateSortButtons(col) {
+      document.querySelectorAll(`.sort-btn[data-column="${col}"]`).forEach(btn => {
+        const sort  = btn.dataset.sort;
+        const state = sortState[col];
+        const isActive = state && state.startsWith(sort);
+        btn.classList.toggle('active', isActive);
+        btn.textContent = isActive
+          ? SORT_LABELS[sort] + (state.endsWith('-asc') ? ' ↑' : ' ↓')
+          : SORT_LABELS[sort];
+      });
+    }
+
+    /* ===== Board Rendering ===== */
+    function renderBoard() {
+      COLUMNS.forEach(col => {
+        const list  = document.getElementById(`list-${col}`);
+        const count = document.getElementById(`count-${col}`);
+        const tasks = getSortedTasks(col);
+        count.textContent = tasks.length;
+        list.innerHTML = '';
+        tasks.forEach(task => list.appendChild(createCardEl(task)));
+      });
+    }
+
+    function createCardEl(task) {
+      const div = document.createElement('div');
+      div.className = 'task-card';
+      div.dataset.id = task.id;
+      const isOverdue = task.dueDate && task.dueDate < TODAY;
+      div.innerHTML = `
+        <div class="task-title">${escHtml(task.title)}</div>
+        <div class="task-meta">
+          <span class="badge ${PRIORITY_CLASS[task.priority]}">${PRIORITY_LABEL[task.priority]}</span>
+          ${task.dueDate
+            ? `<span class="task-due${isOverdue ? ' overdue' : ''}">📅 ${formatDate(task.dueDate)}</span>`
+            : ''}
+        </div>
+      `;
+      div.addEventListener('click', () => openEditModal(task.id));
+      return div;
+    }
+
+    function escHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    /* ===== Sortable ===== */
+    function initSortable() {
+      COLUMNS.forEach(col => {
+        Sortable.create(document.getElementById(`list-${col}`), {
+          group: 'tasks',
+          animation: 150,
+          ghostClass: 'sortable-ghost',
+          dragClass: 'sortable-drag',
+          onEnd(evt) {
+            const toCol   = evt.to.closest('[data-column]').dataset.column;
+            const fromCol = evt.from.closest('[data-column]').dataset.column;
+            const toIds   = [...evt.to.querySelectorAll('.task-card')].map(el => Number(el.dataset.id));
+            const fromIds = [...evt.from.querySelectorAll('.task-card')].map(el => Number(el.dataset.id));
+            AppState.reorderColumn(toCol, toIds);
+            if (fromCol !== toCol) AppState.reorderColumn(fromCol, fromIds);
+            sortState[toCol] = null;
+            sortState[fromCol] = null;
+            updateSortButtons(toCol);
+            updateSortButtons(fromCol);
+            renderBoard();
+          }
+        });
+      });
+    }
+
+    /* ===== Modal ===== */
+    let currentEditId = null;
+    let currentColumn = null;
+
+    const overlay      = document.getElementById('modalOverlay');
+    const modalTitle   = document.getElementById('modalTitle');
+    const cardTitle    = document.getElementById('cardTitle');
+    const cardDesc     = document.getElementById('cardDesc');
+    const cardPriority = document.getElementById('cardPriority');
+    const cardDueDate  = document.getElementById('cardDueDate');
+    const deleteBtn    = document.getElementById('deleteBtn');
+    const titleError   = document.getElementById('cardTitleError');
+
+    function openModal() { overlay.classList.add('open'); cardTitle.focus(); }
+    function closeModal() {
+      overlay.classList.remove('open');
+      document.getElementById('cardForm').reset();
+      cardTitle.classList.remove('err');
+      titleError.classList.remove('show');
+      currentEditId = null;
+      currentColumn = null;
+    }
+
+    function openCreateModal(col) {
+      currentColumn = col;
+      currentEditId = null;
+      modalTitle.textContent = 'タスク作成';
+      deleteBtn.style.display = 'none';
+      openModal();
+    }
+
+    function openEditModal(id) {
+      const task = AppState.getTaskById(id);
+      if (!task) return;
+      currentEditId = id;
+      currentColumn = task.column;
+      modalTitle.textContent = 'タスク編集';
+      cardTitle.value    = task.title;
+      cardDesc.value     = task.description;
+      cardPriority.value = task.priority;
+      cardDueDate.value  = task.dueDate;
+      deleteBtn.style.display = '';
+      openModal();
+    }
+
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      const title = cardTitle.value.trim();
+      if (!title) {
+        cardTitle.classList.add('err');
+        titleError.classList.add('show');
+        cardTitle.focus();
+        return;
+      }
+      cardTitle.classList.remove('err');
+      titleError.classList.remove('show');
+      const data = {
+        title,
+        description: cardDesc.value.trim(),
+        priority:    cardPriority.value,
+        dueDate:     cardDueDate.value,
+        column:      currentColumn
+      };
+      if (currentEditId) {
+        AppState.updateTask(currentEditId, data);
+      } else {
+        AppState.addTask(data);
+      }
+      closeModal();
+      renderBoard();
+    });
+
+    deleteBtn.addEventListener('click', () => {
+      if (!confirm('このタスクを削除しますか？')) return;
+      AppState.deleteTask(currentEditId);
+      closeModal();
+      renderBoard();
+    });
+
+    document.getElementById('cancelBtn').addEventListener('click', closeModal);
+    document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    /* ===== Sort Buttons ===== */
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const col  = btn.dataset.column;
+        const sort = btn.dataset.sort;
+        // 同じキーなら昇順↔降順トグル、別キーなら昇順から開始
+        sortState[col] = sortState[col] === sort + '-asc' ? sort + '-desc' : sort + '-asc';
+        updateSortButtons(col);
+        const list  = document.getElementById(`list-${col}`);
+        list.innerHTML = '';
+        getSortedTasks(col).forEach(task => list.appendChild(createCardEl(task)));
+      });
+    });
+
+    /* ===== Add Card Buttons ===== */
+    document.querySelectorAll('.add-card-btn').forEach(btn => {
+      btn.addEventListener('click', () => openCreateModal(btn.dataset.column));
+    });
+
+    /* ===== Logout ===== */
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      if (confirm('ログアウトしますか？')) {
+        sessionStorage.removeItem('loggedIn');
+        location.href = 'login.html';
+      }
+    });
+
+    /* ===== Init ===== */
+    renderBoard();
+    initSortable();
+  </script>
+</body>
+</html>
