@@ -7,9 +7,9 @@
 | フロントエンド | React + TypeScript | 18.3 / 5.4 |
 | ビルドツール（フロント） | Vite | 5.x |
 | CSSフレームワーク | Tailwind CSS | 3.4 |
-| バックエンド | Java + Spring Boot | 21 / 3.4 |
-| ビルドツール（バック） | Gradle (Kotlin DSL) | 8.7 |
-| O/Rマッパー | MyBatis | 3.5.x (mybatis-spring-boot-starter 3.x) |
+| バックエンド | Java + Spring Boot | 25 LTS / 4.0.5 |
+| ビルドツール（バック） | Gradle (Kotlin DSL) | 9.4.1 |
+| O/Rマッパー | MyBatis | 3.5.x (mybatis-spring-boot-starter 4.x) |
 | データベース | PostgreSQL | 16 |
 | フロント・バック間通信 | REST API (JSON) | — |
 | 認証方式 | JWT (HttpOnly Cookie) | jjwt 0.12 |
@@ -30,8 +30,8 @@
 | 用途 | ライブラリ | バージョン |
 |------|-----------|-----------|
 | DBマイグレーション | Flyway | 10.x |
-| セキュリティ | Spring Security | 6.x |
-| バリデーション | Hibernate Validator | 8.x |
+| セキュリティ | Spring Security | 7.x |
+| バリデーション | Hibernate Validator | 9.x |
 | JWTライブラリ | jjwt (io.jsonwebtoken) | 0.12 |
 
 ## インフラ・開発環境

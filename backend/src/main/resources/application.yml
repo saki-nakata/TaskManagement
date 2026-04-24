@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: taskmanagement
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.example.taskmanagement: DEBUG
