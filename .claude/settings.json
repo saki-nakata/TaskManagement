@@ -42,7 +42,10 @@
       "Bash(pip*)",
       "Bash(java*)",
       "Bash(mvn*)",
-      "Bash(gradle*)"
+      "Bash(gradle*)",
+      "Bash(docker --version*)",
+      "Bash(docker compose ps*)",
+      "Bash(docker compose logs*)"
     ],
     "deny": [
       "Bash(rm *)",

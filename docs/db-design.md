@@ -24,7 +24,7 @@
 
 | カラム名 | 型 | 制約 | 説明 |
 |---------|-----|------|------|
-| id | BIGINT | PK, AUTO_INCREMENT | 一意のID |
+| id | INT | PK, AUTO_INCREMENT | 一意のID |
 | user_id | BIGINT | FK（USER.id）, NOT NULL | 所有ユーザーのID |
 | title | VARCHAR | NOT NULL | タイトル |
 | description | TEXT | | 説明文 |

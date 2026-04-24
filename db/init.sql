@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS tasks (
+    id         SERIAL       PRIMARY KEY,
+    title      VARCHAR(255) NOT NULL,
+    status     VARCHAR(50)  NOT NULL DEFAULT 'TODO',
+    position   INT          NOT NULL DEFAULT 0,
+    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

@@ -1,6 +1,17 @@
 spring:
   application:
     name: taskmanagement
+  datasource:
+    url: jdbc:postgresql://localhost:5432/taskmanagement
+    username: taskuser
+    password: taskpassword
+    driver-class-name: org.postgresql.Driver
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.example.taskmanagement.task
+  configuration:
+    map-underscore-to-camel-case: true
 
 server:
   port: 8080
