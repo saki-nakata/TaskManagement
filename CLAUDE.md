@@ -67,7 +67,7 @@ API仕様書を更新 (#3)
 
 ```bash
 # 新機能の Issue
-gh issue create --title "[Feature] 機能名" --label "feature"
+gh issue create --title "[Feature] 機能名" --label "enhancement"
 
 # バグ報告の Issue
 gh issue create --title "[Bug] バグの説明" --label "bug"
@@ -128,6 +128,19 @@ gh pr merge --squash
 # DB + バックエンドの起動
 docker compose up -d
 
-# フロントエンドの起動（frontend/ ディレクトリがある場合）
-npm run dev
+# フロントエンドの起動
+cd frontend && pnpm dev
 ```
+
+---
+
+## サーバー起動ルール
+
+動作確認などでサーバーを起動する際は、以下のルールを**必ず**守ること。
+
+- アプリケーションが定義しているデフォルトポートで起動する
+  - フロントエンド（Vite）: **5173**
+  - バックエンド（Spring Boot）: **8080**
+- **ポート競合が発生しても、別のポートで起動してはいけない**
+  - 競合しているプロセスを特定してユーザーに確認の上停止する
+  - 停止後、デフォルトポートで起動する
