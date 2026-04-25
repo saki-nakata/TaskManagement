@@ -3,9 +3,17 @@
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.taskmanagement.task.TaskMapper">
 
-    <select id="findAll" resultType="Task">
+    <select id="search" resultType="Task">
         SELECT id, title, status, position, created_at, updated_at
         FROM tasks
+        <where>
+            <if test="keyword != null and keyword != ''">
+                title ILIKE '%' || #{keyword} || '%'
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
         ORDER BY position
     </select>
 
