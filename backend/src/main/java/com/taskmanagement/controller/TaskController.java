@@ -1,5 +1,7 @@
-package com.example.taskmanagement.task;
+package com.taskmanagement.controller;
 
+import com.taskmanagement.model.Task;
+import com.taskmanagement.service.TaskService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;

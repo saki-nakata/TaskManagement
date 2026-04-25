@@ -1,5 +1,7 @@
-package com.example.taskmanagement.task;
+package com.taskmanagement.service;
 
+import com.taskmanagement.mapper.TaskMapper;
+import com.taskmanagement.model.Task;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

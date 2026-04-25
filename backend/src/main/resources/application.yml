@@ -9,7 +9,7 @@ spring:
 
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
-  type-aliases-package: com.example.taskmanagement.task
+  type-aliases-package: com.taskmanagement.model
   configuration:
     map-underscore-to-camel-case: true
 
@@ -18,4 +18,4 @@ server:
 
 logging:
   level:
-    com.example.taskmanagement: DEBUG
+    com.taskmanagement: DEBUG

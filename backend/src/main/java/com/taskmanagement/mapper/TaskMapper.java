@@ -1,5 +1,6 @@
-package com.example.taskmanagement.task;
+package com.taskmanagement.mapper;
 
+import com.taskmanagement.model.Task;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

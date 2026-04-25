@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.taskmanagement.task.TaskMapper">
+<mapper namespace="com.taskmanagement.mapper.TaskMapper">
 
     <select id="search" resultType="Task">
         SELECT id, title, status, position, created_at, updated_at
