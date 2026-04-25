@@ -1,0 +1,58 @@
+name: Feature Request
+description: 新しい機能の追加を提案する
+title: "[Feature] "
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 機能リクエスト
+        作業を開始する前に、必ずこの Issue を作成してください。
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: 機能の概要
+      description: 実装したい機能を簡潔に説明してください
+      placeholder: "例: カードにタグを付ける機能"
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: 動機・背景
+      description: なぜこの機能が必要ですか？
+      placeholder: "例: タスクを分類して見つけやすくするため"
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: 実装方針（任意）
+      description: 実装方法のアイデアがあれば記載してください
+      placeholder: "例: タグテーブルを追加し、カードとの多対多リレーションを持たせる"
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: 対象領域
+      options:
+        - フロントエンド（React）
+        - バックエンド（Spring Boot）
+        - データベース（PostgreSQL / MyBatis）
+        - インフラ（Docker / 設定）
+        - その他
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 事前確認
+      options:
+        - label: 同様の Issue が存在しないことを確認した
+          required: true
+        - label: この Issue を作成してから作業を開始する
+          required: true

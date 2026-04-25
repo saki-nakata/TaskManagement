@@ -1,0 +1,74 @@
+name: Bug Report
+description: バグを報告する
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## バグ報告
+        作業を開始する前に、必ずこの Issue を作成してください。
+
+  - type: textarea
+    id: description
+    attributes:
+      label: バグの説明
+      description: 何が起きているかを具体的に説明してください
+      placeholder: "例: カードをドラッグしてもカラムが変わらない"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      description: バグを再現するための手順を記載してください
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待される動作
+      description: 本来どのように動作すべきかを記載してください
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 実際の動作
+      description: 実際に起きていることを記載してください
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 環境情報
+      value: |
+        - OS:
+        - ブラウザ:
+        - Docker Compose: 起動中 / 停止中
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: エラーログ・スクリーンショット（任意）
+      description: 関連するログやスクリーンショットを貼り付けてください
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 事前確認
+      options:
+        - label: 同様の Issue が存在しないことを確認した
+          required: true
+        - label: この Issue を作成してから修正作業を開始する
+          required: true
