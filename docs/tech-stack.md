@@ -4,8 +4,8 @@
 
 | 項目 | 技術 | バージョン |
 |------|------|-----------|
-| フロントエンド | React + TypeScript | 18.3 / 5.4 |
-| ビルドツール（フロント） | Vite | 5.x |
+| フロントエンド | React + TypeScript | 19.2 / 6.0 |
+| ビルドツール（フロント） | Vite | 8.x |
 | CSSフレームワーク | Tailwind CSS | 3.4 |
 | バックエンド | Java + Spring Boot | 25 LTS / 4.0.5 |
 | ビルドツール（バック） | Gradle (Kotlin DSL) | 9.4.1 |
