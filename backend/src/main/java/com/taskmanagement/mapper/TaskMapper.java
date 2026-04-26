@@ -10,4 +10,6 @@ import java.util.List;
 public interface TaskMapper {
     List<Task> search(@Param("keyword") String keyword,
                       @Param("status")  String status);
+
+    void insert(Task task);
 }

@@ -3,6 +3,7 @@ package com.taskmanagement.service;
 import com.taskmanagement.mapper.TaskMapper;
 import com.taskmanagement.model.Task;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -17,5 +18,13 @@ public class TaskService {
 
     public List<Task> search(String keyword, String status) {
         return taskMapper.search(keyword, status);
+    }
+
+    @Transactional
+    public Task create(Task task) {
+        if (task.getStatus() == null || task.getStatus().isBlank()) task.setStatus("TODO");
+        if (task.getPriority() == null || task.getPriority().isBlank()) task.setPriority("MEDIUM");
+        taskMapper.insert(task);
+        return task;
     }
 }
