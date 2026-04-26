@@ -1,5 +1,6 @@
 package com.taskmanagement.mapper;
 
+import com.taskmanagement.model.ReorderItem;
 import com.taskmanagement.model.Task;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -16,4 +17,6 @@ public interface TaskMapper {
     Task findById(@Param("id") Integer id);
 
     void update(Task task);
+
+    void updatePositionAndStatus(ReorderItem item);
 }
