@@ -5,13 +5,14 @@ import {
   type DragStartEvent, type DragEndEvent, type DragOverEvent,
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
-import { fetchTasks, createTask, updateTask, reorderTasks } from '../api/taskApi';
+import { fetchTasks, createTask, updateTask, reorderTasks, deleteTask } from '../api/taskApi';
 import type { Task, CreateTaskInput, UpdateTaskInput, TaskStatus, SortOrder, ReorderItem } from '../types/task';
 import Column from './Column';
 import SearchBar from './SearchBar';
 import AddTaskModal from './AddTaskModal';
 import TaskDetailModal from './TaskDetailModal';
 import TaskCard from './TaskCard';
+import ConfirmDialog from './ConfirmDialog';
 
 const PRIORITY_RANK: Record<string, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 };
 const STATUS_VALUES: TaskStatus[] = ['TODO', 'IN_PROGRESS', 'DONE'];
@@ -60,6 +61,8 @@ export default function BoardPage() {
   const [sortOrders, setSortOrders] = useState<Record<TaskStatus, SortOrder>>(loadSortOrders);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [overId, setOverId] = useState<number | string | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [deleteTargetTitle, setDeleteTargetTitle] = useState<string>('');
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -100,6 +103,25 @@ export default function BoardPage() {
       status: status || undefined,
     });
     setTasks(data);
+  };
+
+  const handleDeleteRequest = (id: number) => {
+    const task = tasks.find(t => t.id === id);
+    setDeleteTargetId(id);
+    setDeleteTargetTitle(task?.title ?? '');
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (deleteTargetId === null) return;
+    setTasks(prev => prev.filter(t => t.id !== deleteTargetId));
+    setDeleteTargetId(null);
+    setDeleteTargetTitle('');
+    await deleteTask(deleteTargetId);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteTargetId(null);
+    setDeleteTargetTitle('');
   };
 
   const handleSort = (colStatus: TaskStatus, criterion: 'priority' | 'dueDate') => {
@@ -223,6 +245,7 @@ export default function BoardPage() {
               onSort={criterion => handleSort('TODO', criterion)}
               activeTaskId={activeTask?.id ?? null}
               overId={overId}
+              onDelete={handleDeleteRequest}
             />
             <Column
               status="IN_PROGRESS" tasks={inProgressTasks}
@@ -231,6 +254,7 @@ export default function BoardPage() {
               onSort={criterion => handleSort('IN_PROGRESS', criterion)}
               activeTaskId={activeTask?.id ?? null}
               overId={overId}
+              onDelete={handleDeleteRequest}
             />
             <Column
               status="DONE" tasks={doneTasks}
@@ -239,6 +263,7 @@ export default function BoardPage() {
               onSort={criterion => handleSort('DONE', criterion)}
               activeTaskId={activeTask?.id ?? null}
               overId={overId}
+              onDelete={handleDeleteRequest}
             />
           </div>
           <DragOverlay>
@@ -257,6 +282,13 @@ export default function BoardPage() {
           task={selectedTask}
           onClose={() => setSelectedTask(null)}
           onSubmit={handleUpdateTask}
+        />
+      )}
+      {deleteTargetId !== null && (
+        <ConfirmDialog
+          message={`「${deleteTargetTitle}」を削除してもよろしいですか？`}
+          onConfirm={handleDeleteConfirm}
+          onCancel={handleDeleteCancel}
         />
       )}
     </div>

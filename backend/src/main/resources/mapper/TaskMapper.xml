@@ -42,6 +42,10 @@
         WHERE id = #{id}
     </update>
 
+    <delete id="deleteById" parameterType="int">
+        DELETE FROM tasks WHERE id = #{id}
+    </delete>
+
     <insert id="insert" parameterType="Task"
             useGeneratedKeys="true" keyProperty="id">
         INSERT INTO tasks (title, description, status, priority, due_date, position)

@@ -38,6 +38,14 @@ public class TaskService {
     }
 
     @Transactional
+    public boolean delete(Integer id) {
+        Task existing = taskMapper.findById(id);
+        if (existing == null) return false;
+        taskMapper.deleteById(id);
+        return true;
+    }
+
+    @Transactional
     public Task create(Task task) {
         if (task.getStatus() == null || task.getStatus().isBlank()) task.setStatus("TODO");
         if (task.getPriority() == null || task.getPriority().isBlank()) task.setPriority("MEDIUM");

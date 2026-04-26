@@ -29,6 +29,10 @@ export async function reorderTasks(items: ReorderItem[]): Promise<void> {
   await api.patch('/tasks/reorder', items);
 }
 
+export async function deleteTask(id: number): Promise<void> {
+  await api.delete(`/tasks/${id}`);
+}
+
 export async function createTask(input: CreateTaskInput): Promise<Task> {
   const payload = {
     title: input.title,
