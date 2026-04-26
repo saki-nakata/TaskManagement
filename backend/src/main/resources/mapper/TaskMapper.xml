@@ -17,4 +17,17 @@
         ORDER BY position
     </select>
 
+    <insert id="insert" parameterType="Task"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO tasks (title, description, status, priority, due_date, position)
+        VALUES (
+            #{title},
+            #{description},
+            #{status},
+            #{priority},
+            #{dueDate},
+            (SELECT COALESCE(MAX(position), 0) + 1 FROM tasks)
+        )
+    </insert>
+
 </mapper>

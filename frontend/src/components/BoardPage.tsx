@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { fetchTasks } from '../api/taskApi';
-import type { Task } from '../types/task';
+import { fetchTasks, createTask } from '../api/taskApi';
+import type { Task, CreateTaskInput } from '../types/task';
 import Column from './Column';
 import SearchBar from './SearchBar';
+import AddTaskModal from './AddTaskModal';
 
 export default function BoardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -10,6 +11,7 @@ export default function BoardPage() {
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -30,6 +32,15 @@ export default function BoardPage() {
     return () => clearTimeout(timer);
   }, [keyword, status]);
 
+  const handleCreateTask = async (input: CreateTaskInput) => {
+    await createTask(input);
+    const data = await fetchTasks({
+      keyword: keyword || undefined,
+      status: status || undefined,
+    });
+    setTasks(data);
+  };
+
   const todoTasks = tasks.filter(t => t.status === 'TODO');
   const inProgressTasks = tasks.filter(t => t.status === 'IN_PROGRESS');
   const doneTasks = tasks.filter(t => t.status === 'DONE');
@@ -38,6 +49,12 @@ export default function BoardPage() {
     <div className="min-h-screen bg-bg">
       <header className="sticky top-0 z-10 h-14 bg-surface border-b border-border px-6 flex items-center">
         <span className="text-base font-bold text-text">TaskManagement</span>
+        <button
+          onClick={() => setShowModal(true)}
+          className="ml-auto px-3 py-1.5 text-sm rounded bg-primary text-white hover:bg-blue-700"
+        >
+          + タスクを追加
+        </button>
       </header>
       <div className="p-6">
         <SearchBar
@@ -60,6 +77,12 @@ export default function BoardPage() {
           <Column status="DONE" tasks={doneTasks} />
         </div>
       </div>
+      {showModal && (
+        <AddTaskModal
+          onClose={() => setShowModal(false)}
+          onSubmit={handleCreateTask}
+        />
+      )}
     </div>
   );
 }
