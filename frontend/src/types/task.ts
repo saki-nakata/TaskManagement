@@ -20,3 +20,11 @@ export interface CreateTaskInput {
   priority: Priority;
   dueDate: string;
 }
+
+export interface UpdateTaskInput {
+  title: string;
+  description: string;
+  status: TaskStatus;
+  priority: Priority;
+  dueDate: string;
+}

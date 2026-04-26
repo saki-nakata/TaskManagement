@@ -12,4 +12,8 @@ public interface TaskMapper {
                       @Param("status")  String status);
 
     void insert(Task task);
+
+    Task findById(@Param("id") Integer id);
+
+    void update(Task task);
 }

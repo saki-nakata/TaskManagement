@@ -17,14 +17,15 @@ function formatDueDate(dueDate: string): { label: string; overdue: boolean } {
 
 interface Props {
   task: Task;
+  onClick?: () => void;
 }
 
-export default function TaskCard({ task }: Props) {
+export default function TaskCard({ task, onClick }: Props) {
   const priorityBadge = task.priority ? PRIORITY_BADGE[task.priority] : null;
   const due = formatDueDate(task.dueDate);
 
   return (
-    <div className="bg-surface rounded shadow-sm px-3 py-2.5 border border-transparent hover:border-border hover:-translate-y-px hover:shadow-md transition-all cursor-pointer">
+    <div className="bg-surface rounded shadow-sm px-3 py-2.5 border border-transparent hover:border-border hover:-translate-y-px hover:shadow-md transition-all cursor-pointer" onClick={onClick}>
       <p className="text-sm font-medium leading-snug break-words text-text mb-2">{task.title}</p>
       <div className="flex items-center gap-1.5 flex-wrap">
         {priorityBadge && (
