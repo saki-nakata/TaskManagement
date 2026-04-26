@@ -21,6 +21,15 @@ public class TaskService {
     }
 
     @Transactional
+    public Task update(Integer id, Task task) {
+        task.setId(id);
+        if (task.getStatus() == null || task.getStatus().isBlank()) task.setStatus("TODO");
+        if (task.getPriority() == null || task.getPriority().isBlank()) task.setPriority("MEDIUM");
+        taskMapper.update(task);
+        return taskMapper.findById(id);
+    }
+
+    @Transactional
     public Task create(Task task) {
         if (task.getStatus() == null || task.getStatus().isBlank()) task.setStatus("TODO");
         if (task.getPriority() == null || task.getPriority().isBlank()) task.setPriority("MEDIUM");

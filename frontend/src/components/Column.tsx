@@ -10,9 +10,10 @@ const COLUMN_LABELS: Record<TaskStatus, string> = {
 interface Props {
   status: TaskStatus;
   tasks: Task[];
+  onTaskClick: (task: Task) => void;
 }
 
-export default function Column({ status, tasks }: Props) {
+export default function Column({ status, tasks, onTaskClick }: Props) {
   return (
     <div className="w-72 flex-shrink-0 bg-col-bg rounded-lg flex flex-col max-h-[calc(100vh-10rem)]">
       <div className="p-3 flex items-center justify-between">
@@ -25,7 +26,7 @@ export default function Column({ status, tasks }: Props) {
       </div>
       <div className="flex-1 overflow-y-auto px-2 pb-2 flex flex-col gap-2 min-h-[60px]">
         {tasks.map(task => (
-          <TaskCard key={task.id} task={task} />
+          <TaskCard key={task.id} task={task} onClick={() => onTaskClick(task)} />
         ))}
       </div>
     </div>
