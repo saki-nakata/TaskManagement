@@ -19,6 +19,7 @@ interface Props {
   onSort: (criterion: SortCriterion) => void;
   activeTaskId: number | null;
   overId: number | string | null;
+  onDelete: (id: number) => void;
 }
 
 function DropIndicator() {
@@ -30,7 +31,7 @@ function DropIndicator() {
   );
 }
 
-export default function Column({ status, tasks, sortOrder, onTaskClick, onSort, activeTaskId, overId }: Props) {
+export default function Column({ status, tasks, sortOrder, onTaskClick, onSort, activeTaskId, overId, onDelete }: Props) {
   const { setNodeRef } = useDroppable({ id: status });
   const isDragging = activeTaskId !== null;
 
@@ -70,7 +71,7 @@ export default function Column({ status, tasks, sortOrder, onTaskClick, onSort, 
             <div key={task.id} className="flex flex-col">
               {isDragging && overId === task.id && activeTaskId !== task.id && <DropIndicator />}
               <div className="mb-2">
-                <TaskCard task={task} onClick={() => onTaskClick(task)} />
+                <TaskCard task={task} onClick={() => onTaskClick(task)} onDelete={onDelete} />
               </div>
             </div>
           ))}

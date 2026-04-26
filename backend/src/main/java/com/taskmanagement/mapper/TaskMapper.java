@@ -16,6 +16,8 @@ public interface TaskMapper {
 
     Task findById(@Param("id") Integer id);
 
+    void deleteById(@Param("id") Integer id);
+
     void update(Task task);
 
     void updatePositionAndStatus(ReorderItem item);

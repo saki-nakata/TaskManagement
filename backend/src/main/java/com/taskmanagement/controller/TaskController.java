@@ -5,6 +5,7 @@ import com.taskmanagement.model.Task;
 import com.taskmanagement.service.TaskService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -53,5 +54,12 @@ public class TaskController {
     public ResponseEntity<Task> createTask(@RequestBody Task task) {
         Task created = taskService.create(task);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTask(@PathVariable Integer id) {
+        boolean deleted = taskService.delete(id);
+        if (!deleted) return ResponseEntity.notFound().build();
+        return ResponseEntity.noContent().build();
     }
 }
