@@ -19,7 +19,7 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
     description: input.description || null,
     status: input.status,
     priority: input.priority,
-    dueDate: input.dueDate || null,
+    dueDate: input.dueDate,
   };
   const { data } = await api.post<Task>('/tasks', payload);
   return data;

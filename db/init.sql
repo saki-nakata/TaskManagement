@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     description TEXT,
     status      VARCHAR(50)  NOT NULL DEFAULT 'TODO',
     priority   VARCHAR(10)  NOT NULL DEFAULT 'MEDIUM',
-    due_date   DATE,
+    due_date   DATE         NOT NULL,
     position   INT          NOT NULL DEFAULT 0,
     created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP

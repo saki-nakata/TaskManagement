@@ -17,6 +17,7 @@ const DEFAULT_FORM: CreateTaskInput = {
 export default function AddTaskModal({ onClose, onSubmit }: Props) {
   const [form, setForm] = useState<CreateTaskInput>(DEFAULT_FORM);
   const [titleError, setTitleError] = useState('');
+  const [dueDateError, setDueDateError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
@@ -25,14 +26,21 @@ export default function AddTaskModal({ onClose, onSubmit }: Props) {
   ) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
     if (e.target.name === 'title') setTitleError('');
+    if (e.target.name === 'dueDate') setDueDateError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    let hasError = false;
     if (!form.title.trim()) {
       setTitleError('タイトルは必須です');
-      return;
+      hasError = true;
     }
+    if (!form.dueDate) {
+      setDueDateError('期日は必須です');
+      hasError = true;
+    }
+    if (hasError) return;
     setSubmitting(true);
     setSubmitError('');
     try {
@@ -134,14 +142,19 @@ export default function AddTaskModal({ onClose, onSubmit }: Props) {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-text mb-1">期日</label>
+            <label className="block text-xs font-semibold text-text mb-1">
+              期日 <span className="text-red-500">*</span>
+            </label>
             <input
               type="date"
               name="dueDate"
               value={form.dueDate}
               onChange={handleChange}
-              className="w-full border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+              className={`w-full border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary ${dueDateError ? 'border-red-500' : 'border-border'}`}
             />
+            {dueDateError && (
+              <p className="mt-1 text-xs text-red-500">{dueDateError}</p>
+            )}
           </div>
 
           {submitError && (

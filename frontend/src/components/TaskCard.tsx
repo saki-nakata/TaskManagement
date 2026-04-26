@@ -21,7 +21,7 @@ interface Props {
 
 export default function TaskCard({ task }: Props) {
   const priorityBadge = task.priority ? PRIORITY_BADGE[task.priority] : null;
-  const due = task.dueDate ? formatDueDate(task.dueDate) : null;
+  const due = formatDueDate(task.dueDate);
 
   return (
     <div className="bg-surface rounded shadow-sm px-3 py-2.5 border border-transparent hover:border-border hover:-translate-y-px hover:shadow-md transition-all cursor-pointer">
@@ -32,11 +32,9 @@ export default function TaskCard({ task }: Props) {
             {priorityBadge.label}
           </span>
         )}
-        {due && (
-          <span className={`inline-block text-xs px-2 py-0.5 rounded ${due.overdue ? 'text-red-600 font-semibold' : 'text-text-sub'}`}>
-            期限：{due.label}
-          </span>
-        )}
+        <span className={`inline-block text-xs px-2 py-0.5 rounded ${due.overdue ? 'text-red-600 font-semibold' : 'text-text-sub'}`}>
+          期限：{due.label}
+        </span>
       </div>
     </div>
   );
