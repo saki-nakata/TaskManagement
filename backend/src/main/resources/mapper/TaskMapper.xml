@@ -4,7 +4,7 @@
 <mapper namespace="com.taskmanagement.mapper.TaskMapper">
 
     <select id="search" resultType="Task">
-        SELECT id, title, status, position, created_at, updated_at
+        SELECT id, title, status, priority, due_date, position, created_at, updated_at
         FROM tasks
         <where>
             <if test="keyword != null and keyword != ''">
