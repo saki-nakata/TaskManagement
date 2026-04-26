@@ -1,3 +1,5 @@
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import type { Task, Priority } from '../types/task';
 
 const PRIORITY_BADGE: Record<Priority, { bg: string; text: string; label: string }> = {
@@ -21,11 +23,23 @@ interface Props {
 }
 
 export default function TaskCard({ task, onClick }: Props) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
   const priorityBadge = task.priority ? PRIORITY_BADGE[task.priority] : null;
   const due = formatDueDate(task.dueDate);
 
   return (
-    <div className="bg-surface rounded shadow-sm px-3 py-2.5 border border-transparent hover:border-border hover:-translate-y-px hover:shadow-md transition-all cursor-pointer" onClick={onClick}>
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+      }}
+      {...attributes}
+      {...listeners}
+      className="bg-surface rounded shadow-sm px-3 py-2.5 border border-transparent hover:border-border hover:-translate-y-px hover:shadow-md transition-all cursor-grab active:cursor-grabbing"
+      onClick={onClick}
+    >
       <p className="text-sm font-medium leading-snug break-words text-text mb-2">{task.title}</p>
       <div className="flex items-center gap-1.5 flex-wrap">
         {priorityBadge && (
