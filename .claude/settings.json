@@ -56,7 +56,11 @@
       "Bash(gradle*)",
       "Bash(docker --version*)",
       "Bash(docker compose ps*)",
-      "Bash(docker compose logs*)"
+      "Bash(docker compose logs*)",
+      "Bash(docker compose up *)",
+      "Bash(docker compose down *)",
+      "Bash(curl http://localhost*)",
+      "Bash(pnpm*)"
     ],
     "deny": [
       "Bash(rm *)",

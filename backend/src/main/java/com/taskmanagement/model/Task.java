@@ -1,11 +1,14 @@
 package com.taskmanagement.model;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class Task {
     private Integer id;
     private String title;
     private String status;
+    private String priority;
+    private LocalDate dueDate;
     private int position;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -18,6 +21,12 @@ public class Task {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getPriority() { return priority; }
+    public void setPriority(String priority) { this.priority = priority; }
+
+    public LocalDate getDueDate() { return dueDate; }
+    public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
 
     public int getPosition() { return position; }
     public void setPosition(int position) { this.position = position; }
