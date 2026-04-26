@@ -34,6 +34,14 @@
         WHERE id = #{id}
     </update>
 
+    <update id="updatePositionAndStatus" parameterType="com.taskmanagement.model.ReorderItem">
+        UPDATE tasks
+        SET position   = #{position},
+            status     = #{status},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
     <insert id="insert" parameterType="Task"
             useGeneratedKeys="true" keyProperty="id">
         INSERT INTO tasks (title, description, status, priority, due_date, position)

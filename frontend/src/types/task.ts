@@ -28,3 +28,11 @@ export interface UpdateTaskInput {
   priority: Priority;
   dueDate: string;
 }
+
+export type SortOrder = 'position' | 'priority-asc' | 'priority-desc' | 'dueDate-asc' | 'dueDate-desc';
+
+export interface ReorderItem {
+  id: number;
+  status: TaskStatus;
+  position: number;
+}

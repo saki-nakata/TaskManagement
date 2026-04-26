@@ -1,6 +1,7 @@
 package com.taskmanagement.service;
 
 import com.taskmanagement.mapper.TaskMapper;
+import com.taskmanagement.model.ReorderItem;
 import com.taskmanagement.model.Task;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,13 @@ public class TaskService {
         if (task.getPriority() == null || task.getPriority().isBlank()) task.setPriority("MEDIUM");
         taskMapper.update(task);
         return taskMapper.findById(id);
+    }
+
+    @Transactional
+    public void reorder(List<ReorderItem> items) {
+        for (ReorderItem item : items) {
+            taskMapper.updatePositionAndStatus(item);
+        }
     }
 
     @Transactional

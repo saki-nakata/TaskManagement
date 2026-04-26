@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Task, CreateTaskInput, UpdateTaskInput } from '../types/task';
+import type { Task, CreateTaskInput, UpdateTaskInput, ReorderItem } from '../types/task';
 
 const api = axios.create({ baseURL: '/api' });
 
@@ -23,6 +23,10 @@ export async function updateTask(id: number, input: UpdateTaskInput): Promise<Ta
   };
   const { data } = await api.put<Task>(`/tasks/${id}`, payload);
   return data;
+}
+
+export async function reorderTasks(items: ReorderItem[]): Promise<void> {
+  await api.patch('/tasks/reorder', items);
 }
 
 export async function createTask(input: CreateTaskInput): Promise<Task> {
