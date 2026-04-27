@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import {
   DndContext, DragOverlay,
+  closestCenter,
   PointerSensor, useSensor, useSensors,
   type DragStartEvent, type DragEndEvent, type DragOverEvent,
+  type CollisionDetection,
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { fetchTasks, createTask, updateTask, reorderTasks, deleteTask } from '../api/taskApi';
@@ -16,18 +18,37 @@ import ConfirmDialog from './ConfirmDialog';
 
 const PRIORITY_RANK: Record<string, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 };
 const STATUS_VALUES: TaskStatus[] = ['TODO', 'IN_PROGRESS', 'DONE'];
-const SORT_STORAGE_KEY = 'taskboard-sort';
+const COLUMN_ORDER_KEY = 'taskboard-column-order';
 
-function loadSortOrders(): Record<TaskStatus, SortOrder> {
+// タスクカードをカラムコンテナより優先して検出するカスタム衝突検出
+const cardPriorityCollision: CollisionDetection = (args) => {
+  const cardDroppables = args.droppableContainers.filter(
+    c => !STATUS_VALUES.includes(c.id as TaskStatus)
+  );
+  const cardCollisions = closestCenter({ ...args, droppableContainers: cardDroppables });
+  if (cardCollisions.length > 0) return cardCollisions;
+  return closestCenter(args);
+};
+
+function loadColumnOrder(): Partial<Record<TaskStatus, number[]>> {
   try {
-    const stored = localStorage.getItem(SORT_STORAGE_KEY);
+    const stored = localStorage.getItem(COLUMN_ORDER_KEY);
     if (stored) return JSON.parse(stored);
   } catch {}
-  return { TODO: 'position', IN_PROGRESS: 'position', DONE: 'position' };
+  return {};
 }
 
-function saveSortOrders(orders: Record<TaskStatus, SortOrder>) {
-  localStorage.setItem(SORT_STORAGE_KEY, JSON.stringify(orders));
+function saveColumnOrder(orders: Partial<Record<TaskStatus, number[]>>) {
+  localStorage.setItem(COLUMN_ORDER_KEY, JSON.stringify(orders));
+}
+
+// ローカルに保存した並び順を適用。DBにない ID は除外し、新規タスクは末尾に追加する。
+function applyColumnOrder(tasks: Task[], ids: number[] | undefined): Task[] {
+  if (!ids || ids.length === 0) return [...tasks].sort((a, b) => a.position - b.position);
+  const taskMap = new Map(tasks.map(t => [t.id, t]));
+  const ordered = ids.filter(id => taskMap.has(id)).map(id => taskMap.get(id)!);
+  const remaining = tasks.filter(t => !ids.includes(t.id));
+  return [...ordered, ...remaining];
 }
 
 function applySortOrder(tasks: Task[], order: SortOrder): Task[] {
@@ -50,6 +71,8 @@ function applySortOrder(tasks: Task[], order: SortOrder): Task[] {
   return [...tasks].sort((a, b) => a.position - b.position);
 }
 
+type SortCriterion = 'priority' | 'dueDate';
+
 export default function BoardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [keyword, setKeyword] = useState('');
@@ -58,7 +81,13 @@ export default function BoardPage() {
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [sortOrders, setSortOrders] = useState<Record<TaskStatus, SortOrder>>(loadSortOrders);
+  const [columnOrders, setColumnOrders] = useState<Partial<Record<TaskStatus, number[]>>>(loadColumnOrder);
+  // ソート方向のトグル（セッション内のみ、localStorage に保存しない）
+  const [sortDirections, setSortDirections] = useState<Record<TaskStatus, Record<SortCriterion, 'asc' | 'desc'>>>({
+    TODO:        { priority: 'asc', dueDate: 'asc' },
+    IN_PROGRESS: { priority: 'asc', dueDate: 'asc' },
+    DONE:        { priority: 'asc', dueDate: 'asc' },
+  });
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [overId, setOverId] = useState<number | string | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
@@ -114,6 +143,15 @@ export default function BoardPage() {
   const handleDeleteConfirm = async () => {
     if (deleteTargetId === null) return;
     setTasks(prev => prev.filter(t => t.id !== deleteTargetId));
+    // 削除されたタスクを localStorage の順序からも除去
+    setColumnOrders(prev => {
+      const updated = { ...prev };
+      for (const s of STATUS_VALUES) {
+        if (updated[s]) updated[s] = updated[s]!.filter(id => id !== deleteTargetId);
+      }
+      saveColumnOrder(updated);
+      return updated;
+    });
     setDeleteTargetId(null);
     setDeleteTargetTitle('');
     await deleteTask(deleteTargetId);
@@ -124,16 +162,23 @@ export default function BoardPage() {
     setDeleteTargetTitle('');
   };
 
-  const handleSort = (colStatus: TaskStatus, criterion: 'priority' | 'dueDate') => {
-    setSortOrders(prev => {
-      const current = prev[colStatus];
-      const newOrder: SortOrder = current === `${criterion}-asc`
-        ? `${criterion}-desc`
-        : `${criterion}-asc`;
-      const updated = { ...prev, [colStatus]: newOrder };
-      saveSortOrders(updated);
-      return updated;
-    });
+  // ソートボタン: DB 保存なし。表示順（columnOrders）を更新して localStorage に保存。
+  const handleSort = (colStatus: TaskStatus, criterion: SortCriterion) => {
+    const currentDir = sortDirections[colStatus][criterion];
+    const newDir = currentDir === 'asc' ? 'desc' : 'asc';
+    setSortDirections(prev => ({
+      ...prev,
+      [colStatus]: { ...prev[colStatus], [criterion]: newDir },
+    }));
+
+    const colTasks = tasks.filter(t => t.status === colStatus);
+    const displayed = applyColumnOrder(colTasks, columnOrders[colStatus]);
+    const sorted = applySortOrder(displayed, `${criterion}-${newDir}` as SortOrder);
+    const newIds = sorted.map(t => t.id);
+
+    const newOrders = { ...columnOrders, [colStatus]: newIds };
+    setColumnOrders(newOrders);
+    saveColumnOrder(newOrders);
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -163,12 +208,20 @@ export default function BoardPage() {
 
     const sourceStatus = draggedTask.status;
 
-    const sourceColTasks = applySortOrder(tasks.filter(t => t.status === sourceStatus), sortOrders[sourceStatus]);
+    // 現在の表示順（localStorage 反映済み）でインデックスを計算する
+    const sourceColTasks = applyColumnOrder(
+      tasks.filter(t => t.status === sourceStatus),
+      columnOrders[sourceStatus],
+    );
     const targetColTasks = sourceStatus === targetStatus
       ? sourceColTasks
-      : applySortOrder(tasks.filter(t => t.status === targetStatus), sortOrders[targetStatus]);
+      : applyColumnOrder(
+          tasks.filter(t => t.status === targetStatus),
+          columnOrders[targetStatus],
+        );
 
     let reorderItems: ReorderItem[];
+    let newColumnOrders = { ...columnOrders };
 
     if (sourceStatus === targetStatus) {
       const oldIndex = sourceColTasks.findIndex(t => t.id === draggedId);
@@ -178,6 +231,7 @@ export default function BoardPage() {
       if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
       const newOrder = arrayMove(sourceColTasks, oldIndex, newIndex);
       reorderItems = newOrder.map((t, i) => ({ id: t.id, status: sourceStatus, position: i * 1000 }));
+      newColumnOrders[sourceStatus] = newOrder.map(t => t.id);
     } else {
       const newSourceCol = sourceColTasks.filter(t => t.id !== draggedId);
       let insertIndex = targetColTasks.length;
@@ -194,7 +248,12 @@ export default function BoardPage() {
         ...newSourceCol.map((t, i) => ({ id: t.id, status: sourceStatus, position: i * 1000 })),
         ...newTargetCol.map((t, i) => ({ id: t.id, status: targetStatus, position: i * 1000 })),
       ];
+      newColumnOrders[sourceStatus] = newSourceCol.map(t => t.id);
+      newColumnOrders[targetStatus] = newTargetCol.map(t => t.id);
     }
+
+    setColumnOrders(newColumnOrders);
+    saveColumnOrder(newColumnOrders);
 
     const posMap = new Map(reorderItems.map(r => [r.id, r]));
     setTasks(prev =>
@@ -206,9 +265,9 @@ export default function BoardPage() {
     await reorderTasks(reorderItems);
   };
 
-  const todoTasks      = applySortOrder(tasks.filter(t => t.status === 'TODO'),        sortOrders.TODO);
-  const inProgressTasks = applySortOrder(tasks.filter(t => t.status === 'IN_PROGRESS'), sortOrders.IN_PROGRESS);
-  const doneTasks      = applySortOrder(tasks.filter(t => t.status === 'DONE'),         sortOrders.DONE);
+  const todoTasks       = applyColumnOrder(tasks.filter(t => t.status === 'TODO'),        columnOrders.TODO);
+  const inProgressTasks = applyColumnOrder(tasks.filter(t => t.status === 'IN_PROGRESS'), columnOrders.IN_PROGRESS);
+  const doneTasks       = applyColumnOrder(tasks.filter(t => t.status === 'DONE'),         columnOrders.DONE);
 
   return (
     <div className="min-h-screen bg-bg">
@@ -236,11 +295,10 @@ export default function BoardPage() {
         {loading && (
           <p className="mt-4 text-sm text-text-sub">読み込み中...</p>
         )}
-        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
+        <DndContext sensors={sensors} collisionDetection={cardPriorityCollision} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
           <div className="flex gap-4 mt-4 items-start overflow-x-auto pb-4">
             <Column
               status="TODO" tasks={todoTasks}
-              sortOrder={sortOrders.TODO}
               onTaskClick={setSelectedTask}
               onSort={criterion => handleSort('TODO', criterion)}
               activeTaskId={activeTask?.id ?? null}
@@ -249,7 +307,6 @@ export default function BoardPage() {
             />
             <Column
               status="IN_PROGRESS" tasks={inProgressTasks}
-              sortOrder={sortOrders.IN_PROGRESS}
               onTaskClick={setSelectedTask}
               onSort={criterion => handleSort('IN_PROGRESS', criterion)}
               activeTaskId={activeTask?.id ?? null}
@@ -258,7 +315,6 @@ export default function BoardPage() {
             />
             <Column
               status="DONE" tasks={doneTasks}
-              sortOrder={sortOrders.DONE}
               onTaskClick={setSelectedTask}
               onSort={criterion => handleSort('DONE', criterion)}
               activeTaskId={activeTask?.id ?? null}
