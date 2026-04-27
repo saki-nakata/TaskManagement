@@ -38,7 +38,7 @@ export default function TaskCard({ task, onClick, onDelete }: Props) {
       }}
       {...attributes}
       {...listeners}
-      className="bg-surface rounded shadow-sm px-3 py-2.5 border border-transparent hover:border-border hover:-translate-y-px hover:shadow-md transition-all cursor-grab active:cursor-grabbing"
+      className="group bg-surface rounded shadow-sm px-3 py-2.5 border border-transparent hover:border-border hover:-translate-y-px hover:shadow-md transition-all cursor-grab active:cursor-grabbing"
       onClick={onClick}
     >
       <div className="flex items-start gap-1 mb-2">
@@ -51,7 +51,7 @@ export default function TaskCard({ task, onClick, onDelete }: Props) {
               e.stopPropagation();
               onDelete(task.id);
             }}
-            className="flex-shrink-0 p-1 rounded text-text-sub hover:text-red-600 hover:bg-red-50"
+            className="flex-shrink-0 p-1 rounded text-text-sub hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
             aria-label="タスクを削除"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
