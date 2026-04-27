@@ -338,6 +338,10 @@ export default function BoardPage() {
           task={selectedTask}
           onClose={() => setSelectedTask(null)}
           onSubmit={handleUpdateTask}
+          onDelete={() => {
+            setSelectedTask(null);
+            handleDeleteRequest(selectedTask.id);
+          }}
         />
       )}
       {deleteTargetId !== null && (

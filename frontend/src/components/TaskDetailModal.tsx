@@ -5,9 +5,10 @@ interface Props {
   task: Task;
   onClose: () => void;
   onSubmit: (id: number, input: UpdateTaskInput) => Promise<void>;
+  onDelete?: () => void;
 }
 
-export default function TaskDetailModal({ task, onClose, onSubmit }: Props) {
+export default function TaskDetailModal({ task, onClose, onSubmit, onDelete }: Props) {
   const [form, setForm] = useState<UpdateTaskInput>({
     title: task.title,
     description: task.description ?? '',
@@ -160,21 +161,41 @@ export default function TaskDetailModal({ task, onClose, onSubmit }: Props) {
             <p className="text-xs text-red-500">{submitError}</p>
           )}
 
-          <div className="flex justify-end gap-2 pt-1">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm rounded border border-border text-text hover:bg-bg"
-            >
-              キャンセル
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="px-4 py-2 text-sm rounded bg-primary text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              {submitting ? '更新中...' : '更新'}
-            </button>
+          <div className="flex justify-between items-center pt-1">
+            <div>
+              {onDelete && (
+                <button
+                  type="button"
+                  onClick={onDelete}
+                  className="flex items-center gap-1.5 px-4 py-2 text-sm rounded border border-red-600 text-red-600 hover:bg-red-50"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                       fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14H6L5 6"/>
+                    <path d="M10 11v6M14 11v6"/>
+                    <path d="M9 6V4h6v2"/>
+                  </svg>
+                  削除
+                </button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-sm rounded border border-border text-text hover:bg-bg"
+              >
+                キャンセル
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="px-4 py-2 text-sm rounded bg-primary text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {submitting ? '更新中...' : '更新'}
+              </button>
+            </div>
           </div>
         </form>
       </div>
