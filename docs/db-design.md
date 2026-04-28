@@ -4,42 +4,35 @@
 
 | テーブル名 | 説明 |
 |-----------|------|
-| USER | ログインユーザー情報 |
-| TASK | タスク（カード）情報 |
+| tasks | タスク（カード）情報 |
 
 ---
 
-## USER テーブル
+## tasks テーブル
 
 | カラム名 | 型 | 制約 | 説明 |
 |---------|-----|------|------|
-| id | BIGINT | PK, AUTO_INCREMENT | 一意のID |
-| username | VARCHAR | NOT NULL, UNIQUE | ログインID |
-| password_hash | VARCHAR | NOT NULL | BCryptハッシュ化パスワード |
-| created_at | TIMESTAMP | NOT NULL | 作成日時 |
-
----
-
-## TASK テーブル
-
-| カラム名 | 型 | 制約 | 説明 |
-|---------|-----|------|------|
-| id | INT | PK, AUTO_INCREMENT | 一意のID |
-| user_id | BIGINT | FK（USER.id）, NOT NULL | 所有ユーザーのID |
-| title | VARCHAR | NOT NULL | タイトル |
+| id | SERIAL | PK | 一意のID（自動採番） |
+| title | VARCHAR(255) | NOT NULL | タイトル |
 | description | TEXT | | 説明文 |
-| priority | ENUM | NOT NULL | HIGH / MEDIUM / LOW |
-| due_date | DATE | | 期限 |
-| column_type | ENUM | NOT NULL | TODO / IN_PROGRESS / DONE |
-| position | INTEGER | NOT NULL | カラム内の並び順 |
-| created_at | TIMESTAMP | NOT NULL | 作成日時 |
-| updated_at | TIMESTAMP | NOT NULL | 更新日時 |
+| status | VARCHAR(50) | NOT NULL DEFAULT 'TODO' | ステータス（TODO / IN_PROGRESS / DONE） |
+| priority | VARCHAR(10) | NOT NULL DEFAULT 'MEDIUM' | 優先度（HIGH / MEDIUM / LOW） |
+| due_date | DATE | NOT NULL | 期限 |
+| position | INT | NOT NULL DEFAULT 0 | カラム内の並び順 |
+| created_at | TIMESTAMP | NOT NULL DEFAULT CURRENT_TIMESTAMP | 作成日時 |
+| updated_at | TIMESTAMP | NOT NULL DEFAULT CURRENT_TIMESTAMP | 更新日時 |
 
 ---
 
-## ENUMの定義
+## status の値
 
-### priority
+| 値 | 表示名 |
+|----|--------|
+| TODO | Todo |
+| IN_PROGRESS | In Progress |
+| DONE | Done |
+
+## priority の値
 
 | 値 | 表示名 |
 |----|--------|
@@ -47,10 +40,17 @@
 | MEDIUM | 中 |
 | LOW | 低 |
 
-### column_type
+---
 
-| 値 | 表示名 |
-|----|--------|
-| TODO | Todo |
-| IN_PROGRESS | In Progress |
-| DONE | Done |
+## 未実装テーブル（認証機能実装時に追加予定）
+
+### users テーブル
+
+| カラム名 | 型 | 制約 | 説明 |
+|---------|-----|------|------|
+| id | BIGSERIAL | PK | 一意のID |
+| username | VARCHAR | NOT NULL, UNIQUE | ログインID |
+| password_hash | VARCHAR | NOT NULL | BCryptハッシュ化パスワード |
+| created_at | TIMESTAMP | NOT NULL | 作成日時 |
+
+認証機能の実装時は、`tasks` テーブルに `user_id BIGINT NOT NULL REFERENCES users(id)` を追加する予定。

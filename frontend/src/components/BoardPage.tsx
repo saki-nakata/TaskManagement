@@ -34,7 +34,7 @@ function loadColumnOrder(): Partial<Record<TaskStatus, number[]>> {
   try {
     const stored = localStorage.getItem(COLUMN_ORDER_KEY);
     if (stored) return JSON.parse(stored);
-  } catch {}
+  } catch { /* ignore malformed localStorage data */ }
   return {};
 }
 
@@ -221,7 +221,7 @@ export default function BoardPage() {
         );
 
     let reorderItems: ReorderItem[];
-    let newColumnOrders = { ...columnOrders };
+    const newColumnOrders = { ...columnOrders };
 
     if (sourceStatus === targetStatus) {
       const oldIndex = sourceColTasks.findIndex(t => t.id === draggedId);

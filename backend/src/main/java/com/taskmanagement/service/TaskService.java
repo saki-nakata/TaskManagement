@@ -1,5 +1,6 @@
 package com.taskmanagement.service;
 
+import com.taskmanagement.exception.ResourceNotFoundException;
 import com.taskmanagement.mapper.TaskMapper;
 import com.taskmanagement.model.ReorderItem;
 import com.taskmanagement.model.Task;
@@ -22,10 +23,29 @@ public class TaskService {
     }
 
     @Transactional
+    public Task create(Task task) {
+        if (task.getStatus() == null || task.getStatus().isBlank()) {
+            task.setStatus("TODO");
+        }
+        if (task.getPriority() == null || task.getPriority().isBlank()) {
+            task.setPriority("MEDIUM");
+        }
+        taskMapper.insert(task);
+        return task;
+    }
+
+    @Transactional
     public Task update(Integer id, Task task) {
+        if (taskMapper.findById(id) == null) {
+            throw new ResourceNotFoundException("Task not found: " + id);
+        }
         task.setId(id);
-        if (task.getStatus() == null || task.getStatus().isBlank()) task.setStatus("TODO");
-        if (task.getPriority() == null || task.getPriority().isBlank()) task.setPriority("MEDIUM");
+        if (task.getStatus() == null || task.getStatus().isBlank()) {
+            task.setStatus("TODO");
+        }
+        if (task.getPriority() == null || task.getPriority().isBlank()) {
+            task.setPriority("MEDIUM");
+        }
         taskMapper.update(task);
         return taskMapper.findById(id);
     }
@@ -38,18 +58,10 @@ public class TaskService {
     }
 
     @Transactional
-    public boolean delete(Integer id) {
-        Task existing = taskMapper.findById(id);
-        if (existing == null) return false;
+    public void delete(Integer id) {
+        if (taskMapper.findById(id) == null) {
+            throw new ResourceNotFoundException("Task not found: " + id);
+        }
         taskMapper.deleteById(id);
-        return true;
-    }
-
-    @Transactional
-    public Task create(Task task) {
-        if (task.getStatus() == null || task.getStatus().isBlank()) task.setStatus("TODO");
-        if (task.getPriority() == null || task.getPriority().isBlank()) task.setPriority("MEDIUM");
-        taskMapper.insert(task);
-        return task;
     }
 }
