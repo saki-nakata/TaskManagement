@@ -3,6 +3,7 @@ package com.taskmanagement.controller;
 import com.taskmanagement.model.ReorderItem;
 import com.taskmanagement.model.Task;
 import com.taskmanagement.service.TaskService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,12 +36,17 @@ public class TaskController {
         return taskService.search(keyword, status);
     }
 
+    @PostMapping
+    public ResponseEntity<Task> createTask(@Valid @RequestBody Task task) {
+        Task created = taskService.create(task);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<Task> updateTask(
             @PathVariable Integer id,
-            @RequestBody Task task) {
+            @Valid @RequestBody Task task) {
         Task updated = taskService.update(id, task);
-        if (updated == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(updated);
     }
 
@@ -50,16 +56,9 @@ public class TaskController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping
-    public ResponseEntity<Task> createTask(@RequestBody Task task) {
-        Task created = taskService.create(task);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
-    }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable Integer id) {
-        boolean deleted = taskService.delete(id);
-        if (!deleted) return ResponseEntity.notFound().build();
+        taskService.delete(id);
         return ResponseEntity.noContent().build();
     }
 }
