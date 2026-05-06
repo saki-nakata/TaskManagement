@@ -121,8 +121,20 @@ chmod 400 ~/.ssh/taskmanagement-key.pem
 ```bash
 cd infra/terraform
 cp terraform.tfvars.example terraform.tfvars
-# ec2_key_pair_name の値を、作成したキーペア名に変更する
 ```
+
+`terraform.tfvars` を開いて以下の値を設定します：
+
+```bash
+# 自分のPCのパブリックIPを確認する
+curl ifconfig.me
+# → 203.0.113.1 のように表示される。/32 をつけて my_ip に設定する
+```
+
+| 設定項目 | 値 |
+|---------|-----|
+| `ec2_key_pair_name` | 第4章で作成したキーペア名 |
+| `my_ip` | `curl ifconfig.me` で確認したIP + `/32`（例: `203.0.113.1/32`） |
 
 ### 2. Terraform の実行
 

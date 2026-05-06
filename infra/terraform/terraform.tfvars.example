@@ -1,3 +1,4 @@
 aws_region        = "ap-northeast-1"
 project_name      = "taskmanagement"
 ec2_key_pair_name = "taskmanagement-key"
+my_ip             = "x.x.x.x/32"   # curl ifconfig.me で確認した自分のIPを入力
