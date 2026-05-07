@@ -27,6 +27,16 @@ cd backend
 ./gradlew checkstyleMain checkstyleTest
 ```
 
+### 3. Terraform
+
+作業ディレクトリ: `infra/terraform/`
+
+```bash
+cd infra/terraform
+terraform fmt -check -recursive
+terraform validate
+```
+
 ## 結果のレポート
 
 チェックが完了したら、以下の形式でまとめて報告すること。
@@ -47,6 +57,10 @@ cd backend
 ### バックエンド（Checkstyle）
 - 結果: PASS / FAIL
 - 違反数: X 件
+- 問題があれば内容を列挙
+
+### Terraform（fmt / validate）
+- 結果: PASS / FAIL
 - 問題があれば内容を列挙
 ```
 
