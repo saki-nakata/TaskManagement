@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   DndContext, DragOverlay,
-  closestCenter,
+  closestCenter, pointerWithin,
   PointerSensor, useSensor, useSensors,
-  type DragStartEvent, type DragEndEvent, type DragOverEvent,
+  type DragStartEvent, type DragEndEvent, type DragOverEvent, type DragMoveEvent,
   type CollisionDetection,
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
@@ -20,13 +20,13 @@ const PRIORITY_RANK: Record<string, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 };
 const STATUS_VALUES: TaskStatus[] = ['TODO', 'IN_PROGRESS', 'DONE'];
 const COLUMN_ORDER_KEY = 'taskboard-column-order';
 
-// タスクカードをカラムコンテナより優先して検出するカスタム衝突検出
+// ポインターがカード上にある場合はカードを優先、それ以外はカラムを含む最近傍で検出
 const cardPriorityCollision: CollisionDetection = (args) => {
   const cardDroppables = args.droppableContainers.filter(
     c => !STATUS_VALUES.includes(c.id as TaskStatus)
   );
-  const cardCollisions = closestCenter({ ...args, droppableContainers: cardDroppables });
-  if (cardCollisions.length > 0) return cardCollisions;
+  const pointerInCard = pointerWithin({ ...args, droppableContainers: cardDroppables });
+  if (pointerInCard.length > 0) return pointerInCard;
   return closestCenter(args);
 };
 
@@ -90,6 +90,8 @@ export default function BoardPage() {
   });
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [overId, setOverId] = useState<number | string | null>(null);
+  const [overInsertBefore, setOverInsertBefore] = useState(true);
+  const overInsertBeforeRef = useRef(true);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [deleteTargetTitle, setDeleteTargetTitle] = useState<string>('');
 
@@ -186,13 +188,30 @@ export default function BoardPage() {
     setActiveTask(task ?? null);
   };
 
-  const handleDragOver = ({ over }: DragOverEvent) => {
+  const handleDragMove = ({ over, active }: DragMoveEvent) => {
+    if (!over || !active.rect.current.translated) return;
+    const activeCenterY = active.rect.current.translated.top + active.rect.current.translated.height / 2;
+    const overCenterY = over.rect.top + over.rect.height / 2;
+    overInsertBeforeRef.current = activeCenterY <= overCenterY;
+  };
+
+  const handleDragOver = ({ over, active }: DragOverEvent) => {
     setOverId(over?.id ?? null);
+    if (over && active.rect.current.translated) {
+      const activeCenterY = active.rect.current.translated.top + active.rect.current.translated.height / 2;
+      const overCenterY = over.rect.top + over.rect.height / 2;
+      setOverInsertBefore(activeCenterY <= overCenterY);
+    } else {
+      setOverInsertBefore(true);
+    }
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
+    const insertBefore = overInsertBeforeRef.current;
     setActiveTask(null);
     setOverId(null);
+    setOverInsertBefore(true);
+    overInsertBeforeRef.current = true;
     const { active, over } = event;
     if (!over) return;
 
@@ -235,9 +254,11 @@ export default function BoardPage() {
     } else {
       const newSourceCol = sourceColTasks.filter(t => t.id !== draggedId);
       let insertIndex = targetColTasks.length;
-      if (!STATUS_VALUES.includes(overId as TaskStatus)) {
+      if (!isOverColumn) {
         const overIdx = targetColTasks.findIndex(t => t.id === Number(overId));
-        if (overIdx !== -1) insertIndex = overIdx;
+        if (overIdx !== -1) {
+          insertIndex = insertBefore ? overIdx : overIdx + 1;
+        }
       }
       const newTargetCol = [
         ...targetColTasks.slice(0, insertIndex),
@@ -295,7 +316,7 @@ export default function BoardPage() {
         {loading && (
           <p className="mt-4 text-sm text-text-sub">読み込み中...</p>
         )}
-        <DndContext sensors={sensors} collisionDetection={cardPriorityCollision} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
+        <DndContext sensors={sensors} collisionDetection={cardPriorityCollision} onDragStart={handleDragStart} onDragMove={handleDragMove} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
           <div className="flex gap-4 mt-4 items-start overflow-x-auto pb-4">
             <Column
               status="TODO" tasks={todoTasks}
@@ -303,6 +324,7 @@ export default function BoardPage() {
               onSort={criterion => handleSort('TODO', criterion)}
               activeTaskId={activeTask?.id ?? null}
               overId={overId}
+              overInsertBefore={overInsertBefore}
               onDelete={handleDeleteRequest}
             />
             <Column
@@ -311,6 +333,7 @@ export default function BoardPage() {
               onSort={criterion => handleSort('IN_PROGRESS', criterion)}
               activeTaskId={activeTask?.id ?? null}
               overId={overId}
+              overInsertBefore={overInsertBefore}
               onDelete={handleDeleteRequest}
             />
             <Column
@@ -319,6 +342,7 @@ export default function BoardPage() {
               onSort={criterion => handleSort('DONE', criterion)}
               activeTaskId={activeTask?.id ?? null}
               overId={overId}
+              overInsertBefore={overInsertBefore}
               onDelete={handleDeleteRequest}
             />
           </div>

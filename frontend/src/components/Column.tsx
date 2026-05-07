@@ -18,6 +18,7 @@ interface Props {
   onSort: (criterion: SortCriterion) => void;
   activeTaskId: number | null;
   overId: number | string | null;
+  overInsertBefore: boolean;
   onDelete: (id: number) => void;
 }
 
@@ -30,7 +31,7 @@ function DropIndicator() {
   );
 }
 
-export default function Column({ status, tasks, onTaskClick, onSort, activeTaskId, overId, onDelete }: Props) {
+export default function Column({ status, tasks, onTaskClick, onSort, activeTaskId, overId, overInsertBefore, onDelete }: Props) {
   const { setNodeRef } = useDroppable({ id: status });
   const isDragging = activeTaskId !== null;
   const activeIdx = tasks.findIndex(t => t.id === activeTaskId);
@@ -61,7 +62,8 @@ export default function Column({ status, tasks, onTaskClick, onSort, activeTaskI
         <div ref={setNodeRef} className="flex-1 overflow-y-auto px-2 pb-2 flex flex-col min-h-[60px]">
           {tasks.map((task, taskIdx) => {
             const showIndicator = isDragging && overId === task.id && activeTaskId !== task.id;
-            const showBelow = showIndicator && activeIdx !== -1 && activeIdx < taskIdx;
+            const isCrossColumn = activeIdx === -1;
+            const showBelow = showIndicator && (isCrossColumn ? !overInsertBefore : activeIdx < taskIdx);
             const showAbove = showIndicator && !showBelow;
             return (
               <div key={task.id} className="flex flex-col">
