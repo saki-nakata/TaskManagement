@@ -23,6 +23,8 @@
 | keyword | string | タイトルの部分一致検索（大文字小文字無視） |
 | status | string | ステータスで絞り込み（TODO / IN_PROGRESS / DONE） |
 
+**レスポンス:** `200 OK`
+
 ---
 
 ### POST /api/tasks
