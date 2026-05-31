@@ -19,3 +19,9 @@ variable "my_ip" {
   description = "自分のPCのパブリックIP（CIDR形式）。`curl ifconfig.me` で確認できる。例: \"203.0.113.1/32\""
   type        = string
 }
+
+variable "db_password" {
+  description = "RDS PostgreSQL のマスターパスワード"
+  type        = string
+  sensitive   = true
+}

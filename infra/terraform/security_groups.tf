@@ -48,3 +48,19 @@ resource "aws_security_group" "ec2" {
 
   tags = { Name = "${var.project_name}-ec2-sg" }
 }
+
+resource "aws_security_group" "rds" {
+  name        = "${var.project_name}-rds-sg"
+  description = "RDS PostgreSQL - allow access from EC2 only"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description     = "PostgreSQL from EC2"
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ec2.id]
+  }
+
+  tags = { Name = "${var.project_name}-rds-sg" }
+}
